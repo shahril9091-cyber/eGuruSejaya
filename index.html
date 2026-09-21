@@ -517,18 +517,31 @@ function toast(msg, type = '') {
 }
 
 /* ===================== Modal ===================== */
+/* Setiap modal yang dibuka menambah satu entri sejarah, supaya butang Back (mobile) menutup modal dan
+   kembali ke muka depan, bukannya keluar dari sistem. */
+let skipPop = 0;   // bilangan popstate yang dicetuskan oleh history.back() kita sendiri
+if (history.state?.modal) history.replaceState(null, '');   // muat semula ketika modal terbuka: buang entri lapuk
 function openModal(ov) {
   ov._prev = document.activeElement;
   ov.hidden = false;
   document.body.classList.add('lock');
+  if (!ov._hist) { history.pushState({ modal: ov.id }, ''); ov._hist = true; }
   requestAnimationFrame(() => (ov.querySelector('[autofocus]') || ov.querySelector('input:not([hidden]),.x,button'))?.focus());
 }
-function closeModal(ov) {
+function closeModal(ov, fromPop = false) {
   ov.hidden = true;
   if (![...document.querySelectorAll('.overlay')].some(o => !o.hidden)) document.body.classList.remove('lock');
   ov._prev?.focus?.();
+  if (ov._hist) { ov._hist = false; if (!fromPop) { skipPop++; history.back(); } }   // tutup melalui UI: buang entri sejarahnya
 }
 const visibleOverlay = () => [...document.querySelectorAll('.overlay')].filter(o => !o.hidden).pop();
+window.addEventListener('popstate', () => {
+  if (skipPop > 0) { skipPop--; return; }
+  const ov = visibleOverlay();
+  if (!ov) return;
+  if (saving) { history.pushState({ modal: ov.id }, ''); return; }   // jangan tutup borang semasa menyimpan
+  closeModal(ov, true);
+});
 document.addEventListener('click', e => {
   const c = e.target.closest('[data-close]');
   if (c) closeModal(c.closest('.overlay'));
@@ -961,6 +974,34 @@ const loadScript = src => libs[src] ??= new Promise((res, rej) => {
   s.onerror = () => { delete libs[src]; rej(new Error('Pustaka PDF gagal dimuatkan. Semak talian internet.')); };
   document.head.appendChild(s);
 });
+/* autotable mesti dimuatkan SELEPAS jspdf (ia mendaftar dirinya pada jsPDF ketika dimuat). Memuat serentak menyebabkan
+   "autoTable is not a function" apabila fail kecil siap dahulu, lazimnya pada rangkaian mudah alih. */
+const loadPdfLibs = () => libs.pdf ??= loadScript(JSPDF_SRC).then(() => loadScript(AUTOTABLE_SRC)).catch(err => { delete libs.pdf; throw err; });
+setTimeout(() => loadPdfLibs().catch(() => {}), 1500);   // muat awal di latar supaya klik butang terus menjana PDF
+
+/* Serahkan PDF kepada pengguna. Pelayar dalam aplikasi (WhatsApp, Facebook, dll.) dan sebahagian pelayar mobile tidak
+   menyokong muat turun melalui <a download>, jadi guna helaian Kongsi atau buka dalam tab baharu sebagai ganti. */
+async function deliverPdf(doc, name) {
+  const blob = doc.output('blob');
+  const ua = navigator.userAgent;
+  const inApp = /FBAN|FBAV|FB_IAB|Instagram|Line\/|MicroMessenger|Telegram|WhatsApp|; wv\)/i.test(ua);
+  if (inApp) {
+    const file = new File([blob], name, { type: 'application/pdf' });
+    if (navigator.canShare?.({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: name }); return 'shared'; }
+      catch (err) { if (err?.name === 'AbortError') return 'shared'; }
+    }
+    const url = URL.createObjectURL(blob);
+    if (window.open(url, '_blank')) { setTimeout(() => URL.revokeObjectURL(url), 60000); return 'opened'; }
+    URL.revokeObjectURL(url);
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.style.display = 'none';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 60000);
+  return 'downloaded';
+}
 
 /* PDF-START */
 function buildPdf(list, logo, jsPDF) {
@@ -1053,12 +1094,15 @@ document.querySelectorAll('.js-pdf').forEach(btn => btn.addEventListener('click'
   const label = btn.innerHTML;
   btn.disabled = true; btn.textContent = 'Menjana PDF…';
   try {
-    await Promise.all([loadScript(JSPDF_SRC), loadScript(AUTOTABLE_SRC)]);
+    await withTimeout(loadPdfLibs(), 20000);
     const doc = buildPdf(people, $('#logo').src, window.jspdf.jsPDF);
     const d = new Date(), p2 = n => String(n).padStart(2, '0');
-    doc.save(`Senarai_Guru_dan_Kakitangan_SK_Seri_Jaya_${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}.pdf`);
-    toast('PDF sedang dimuat turun.', 'ok');
-  } catch (err) { toast(err.message, 'err'); }
+    const how = await deliverPdf(doc, `Senarai_Guru_dan_Kakitangan_SK_Seri_Jaya_${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}.pdf`);
+    toast(how === 'downloaded' ? 'PDF sedang dimuat turun.' : how === 'opened' ? 'PDF dibuka dalam tab baharu. Simpan dari sana.' : 'PDF sedia.', 'ok');
+  } catch (err) {
+    Object.keys(libs).forEach(k => delete libs[k]);   // benarkan cuba semula jika pemuatan tergantung / gagal
+    toast(err?.message?.startsWith('Pustaka') ? err.message : errMsg(err), 'err');
+  }
   finally { btn.disabled = false; btn.innerHTML = label; }
 }));
 let resizeTimer;
