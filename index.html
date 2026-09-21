@@ -70,6 +70,7 @@ main{flex:1;padding-bottom:40px}
 .group h2::after{content:"";flex:1;height:2px;background:linear-gradient(90deg,var(--yellow),transparent)}
 .grid{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 .grid .card{width:calc((100% - 12px) / 2)}
+.grid+.grid{margin-top:12px}
 @media(min-width:700px){.grid{gap:14px}.grid .card{width:150px}.group[data-gk="Pentadbir"] .grid .card{width:230px}}
 .card{appearance:none;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;transition:transform .18s,box-shadow .18s}
 .card:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(80,25,25,.18)}
@@ -263,6 +264,7 @@ footer{border-top:1px solid var(--line);background:#fff;color:var(--muted);font-
   .sub{font-size:13px;margin-bottom:8px}
   .sub small{font-size:11px}
   .grid{gap:8px}
+  .grid+.grid{margin-top:8px}
   .grid .card,.group[data-gk="Pentadbir"] .grid .card{width:calc((100% - 16px) / 3)}
   .card{border-radius:10px}
   .card-body{padding:6px 5px 8px;border-top-width:2px}
@@ -617,6 +619,9 @@ function renderInfo() {
         <div class="card-photo">${avatar(p)}</div>
         <div class="card-body"><h3>${esc(p.nama)}</h3><p>${esc(p.jawatan)}</p>${p.gred ? `<span class="gred">${esc(p.gred)}</span>` : ''}</div></button>`;
   const grid = g => `<div class="grid">${g.map(cardHTML).join('')}</div>`;
+  /* Pentadbir: Guru Besar seorang di baris atas (tengah), pentadbir lain di baris bawah. */
+  const isGB = p => /^\s*guru\s+besar\b/i.test(p.jawatan || '');
+  const pentadbirGrid = g => { const gb = g.filter(isGB); return gb.length ? grid(gb) + grid(g.filter(p => !isGB(p))) : grid(g); };
   const isOpen = key => !!q || !collapsed.has(key);   // semasa carian, semua kumpulan dibuka
   const head = (tag, key, cls, inner) => `<${tag} class="${cls}"><button class="ghead" type="button" data-key="${key}" aria-expanded="${isOpen(key)}"><svg class="i chev"><use href="#i-chevron"/></svg>${inner}</button></${tag}>`;
   const guruSub = g => [['Lelaki', 'L'], ['Perempuan', 'P'], ['', 'X']]
@@ -629,7 +634,7 @@ function renderInfo() {
   box.innerHTML = KATEGORI.map(k => {
     const g = list.filter(p => p.kategori === k);
     if (!g.length) return '';
-    return `<section class="group${isOpen(k) ? '' : ' is-collapsed'}" data-gk="${k}">${head('h2', k, '', `${k} <small>${g.length} orang</small>`)}<div class="gbody">${k === 'Guru' ? guruSub(g) : grid(g)}</div></section>`;
+    return `<section class="group${isOpen(k) ? '' : ' is-collapsed'}" data-gk="${k}">${head('h2', k, '', `${k} <small>${g.length} orang</small>`)}<div class="gbody">${k === 'Guru' ? guruSub(g) : k === 'Pentadbir' ? pentadbirGrid(g) : grid(g)}</div></section>`;
   }).filter(Boolean).join('<div class="divider" role="separator"><i></i></div>');
   fitJawatan();
 }
