@@ -1066,11 +1066,14 @@ function buildPdf(list, logo, jsPDF, title) {
   const bar = (text, fill, color, size) => rows.push({ bar: true, cells: [{ content: text, colSpan: 5, styles: { fillColor: fill, textColor: color, fontStyle: 'bold', fontSize: size, halign: 'left' } }] });
   const guruGroup = list.filter(p => p.kategori !== 'Kakitangan');       // Pentadbir & Guru digabungkan
   const kakitanganGroup = list.filter(p => p.kategori === 'Kakitangan');
+  const groups = [];
   const addSection = (label, group) => {
     if (!group.length) return;
     bar(`${label}  (${group.length})`, MAROON, [255, 255, 255], 10.5);
+    const barIndex = rows.length - 1;
     let n = 0;
     group.forEach(p => rows.push({ cells: [String(++n), p.nama, formatIC(p.noKp), p.telefon || '-', p.gred || '-'] }));
+    groups.push({ barIndex, lastIndex: rows.length - 1 });
   };
   addSection('NAMA GURU', guruGroup);
   addSection('NAMA KAKITANGAN', kakitanganGroup);
@@ -1093,17 +1096,24 @@ function buildPdf(list, logo, jsPDF, title) {
     ...hooks,
   });
 
-  // Elak tajuk bahagian tertinggal berseorangan di hujung halaman: tolak ke halaman seterusnya
+  // Kumpulan kecil (cth. Nama Kakitangan) mesti kekal bersama dalam satu halaman - tidak terputus separuh
+  // jalan. Kumpulan besar (cth. Nama Guru, selalunya melebihi satu halaman) hanya dielakkan daripada bar
+  // tajuknya keseorangan tanpa sebarang baris mengekorinya di halaman yang sama.
+  const SAFE_GROUP_ROWS = 20;
   for (let guard = 0; guard < 10; guard++) {
     const tmp = new jsPDF({ unit: 'mm', format: 'a4' }), pos = [];
     tmp.autoTable(tableOpts({ didDrawCell: c => {
       if (c.section === 'body' && c.column.index === 0) pos[c.row.index] = { page: tmp.internal.getCurrentPageInfo().pageNumber, y: c.cell.y };
     } }));
-    const i = rows.findIndex((r, k) => r.bar && pos[k + 1] && pos[k + 1].page !== pos[k].page);
-    if (i < 0) break;
-    let s = i;
-    while (s > 0 && rows[s - 1].bar && pos[s - 1].page === pos[i].page) s--;
+    const split = groups.find(g => {
+      if (!pos[g.barIndex]) return false;
+      const checkIndex = (g.lastIndex - g.barIndex) <= SAFE_GROUP_ROWS ? g.lastIndex : g.barIndex + 1;
+      return pos[checkIndex] && pos[checkIndex].page !== pos[g.barIndex].page;
+    });
+    if (!split) break;
+    const s = split.barIndex;
     rows.splice(s, 0, { cells: [{ content: '', colSpan: 5, styles: { minCellHeight: H - 20 - pos[s].y - 0.5, fillColor: [255, 255, 255], lineWidth: 0 } }] });
+    groups.forEach(g => { if (g.barIndex >= s) { g.barIndex++; g.lastIndex++; } });
   }
 
   doc.autoTable(tableOpts({ didDrawPage: drawHeader }));
