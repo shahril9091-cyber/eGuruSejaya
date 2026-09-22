@@ -34,12 +34,13 @@ body.lock{overflow:hidden}
 
 /* ---------- Tabs ---------- */
 .tabbar{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(60,30,20,.05)}
-.tabs{display:flex;align-items:center;gap:4px}
+.tabs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;column-gap:12px}
+.tab-group{display:flex;gap:4px;grid-column:2;justify-self:center}
 .tab{appearance:none;border:0;background:none;padding:15px 18px;font:inherit;font-weight:700;letter-spacing:.06em;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;display:flex;gap:8px;align-items:center;margin-bottom:-1px}
 .tab:hover{color:var(--maroon)}
 .tab[aria-selected="true"]{color:var(--maroon);border-bottom-color:var(--maroon)}
 .tab:focus-visible{outline:2px solid var(--navy);outline-offset:-3px;border-radius:6px}
-.conn{margin-left:auto;font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;white-space:nowrap}
+.conn{grid-column:3;justify-self:end;font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;white-space:nowrap}
 .dot{width:8px;height:8px;border-radius:50%;background:#c9a227}
 .conn.on .dot{background:#2ea36a;box-shadow:0 0 0 3px rgba(46,163,106,.2)}
 @media(max-width:520px){.conn span{display:none}.tab{padding:14px 12px}}
@@ -120,6 +121,14 @@ main{flex:1;padding-bottom:40px}
 .btn.danger-solid:hover{background:#a52a22}
 .btn.sm{padding:6px 11px;font-size:13px;border-radius:8px}
 .btn[disabled]{opacity:.6;cursor:not-allowed}
+
+/* ---------- Menu muat turun PDF ---------- */
+.pdf-menu{position:relative;display:inline-flex}
+.pdf-menu .chev{width:.8em;height:.8em;margin-left:-2px;transition:transform .15s}
+.js-pdf-toggle[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.pdf-menu-list{position:absolute;top:calc(100% + 6px);right:0;min-width:200px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 28px rgba(60,30,20,.18);padding:6px;z-index:30;display:flex;flex-direction:column;gap:2px}
+.pdf-menu-item{appearance:none;border:0;background:none;text-align:left;width:100%;padding:9px 12px;border-radius:8px;font:inherit;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer}
+.pdf-menu-item:hover,.pdf-menu-item:focus-visible{background:#f6efe6;color:var(--maroon);outline:none}
 
 /* ---------- Admin ---------- */
 .gate{max-width:400px;margin:56px auto 0;background:#fff;border:1px solid var(--line);border-radius:18px;padding:32px 28px;text-align:center;box-shadow:var(--shadow)}
@@ -336,12 +345,14 @@ footer{border-top:1px solid var(--line);background:#fff;color:var(--muted);font-
 
 <div class="tabbar">
   <nav class="wrap tabs" role="tablist" aria-label="Menu utama">
-    <button class="tab" role="tab" id="tabBtnInfo" data-tab="info" aria-selected="true" aria-controls="tabInfo">
-      <svg class="i"><use href="#i-users"/></svg>MAKLUMAT GURU
-    </button>
-    <button class="tab" role="tab" id="tabBtnAdmin" data-tab="admin" aria-selected="false" aria-controls="tabAdmin">
-      <svg class="i" id="adminIcon"><use href="#i-lock"/></svg>ADMIN
-    </button>
+    <div class="tab-group">
+      <button class="tab" role="tab" id="tabBtnInfo" data-tab="info" aria-selected="true" aria-controls="tabInfo">
+        <svg class="i"><use href="#i-users"/></svg>MAKLUMAT GURU
+      </button>
+      <button class="tab" role="tab" id="tabBtnAdmin" data-tab="admin" aria-selected="false" aria-controls="tabAdmin">
+        <svg class="i" id="adminIcon"><use href="#i-lock"/></svg>ADMIN
+      </button>
+    </div>
     <div class="conn" id="conn"><i class="dot"></i><span id="connText">Menyambung…</span></div>
   </nav>
 </div>
@@ -356,7 +367,14 @@ footer{border-top:1px solid var(--line);background:#fff;color:var(--muted);font-
       </div>
       <div class="chips" id="chips" role="group" aria-label="Tapis kategori"></div>
       <span class="spacer"></span>
-      <button class="btn js-pdf" type="button"><svg class="i"><use href="#i-download"/></svg>Muat Turun PDF</button>
+      <div class="pdf-menu">
+        <button class="btn js-pdf-toggle" type="button" aria-haspopup="true" aria-expanded="false"><svg class="i"><use href="#i-download"/></svg>Muat Turun PDF<svg class="i chev"><use href="#i-chevron"/></svg></button>
+        <div class="pdf-menu-list" role="menu" hidden>
+          <button type="button" class="pdf-menu-item" role="menuitem" data-scope="guru">Guru Sahaja</button>
+          <button type="button" class="pdf-menu-item" role="menuitem" data-scope="kakitangan">Kakitangan Sahaja</button>
+          <button type="button" class="pdf-menu-item" role="menuitem" data-scope="semua">Kedua-Dua Sekali</button>
+        </div>
+      </div>
     </div>
     <div id="listInfo"></div>
   </section>
@@ -383,7 +401,14 @@ footer{border-top:1px solid var(--line);background:#fff;color:var(--muted);font-
         </div>
         <span class="count-text" id="adminCount"></span>
         <span class="spacer"></span>
-        <button class="btn js-pdf" type="button"><svg class="i"><use href="#i-download"/></svg>Muat Turun PDF</button>
+        <div class="pdf-menu">
+          <button class="btn js-pdf-toggle" type="button" aria-haspopup="true" aria-expanded="false"><svg class="i"><use href="#i-download"/></svg>Muat Turun PDF<svg class="i chev"><use href="#i-chevron"/></svg></button>
+          <div class="pdf-menu-list" role="menu" hidden>
+            <button type="button" class="pdf-menu-item" role="menuitem" data-scope="guru">Guru Sahaja</button>
+            <button type="button" class="pdf-menu-item" role="menuitem" data-scope="kakitangan">Kakitangan Sahaja</button>
+            <button type="button" class="pdf-menu-item" role="menuitem" data-scope="semua">Kedua-Dua Sekali</button>
+          </div>
+        </div>
         <button class="btn primary" id="btnAdd" type="button"><svg class="i"><use href="#i-plus"/></svg>Tambah Guru</button>
         <button class="btn" id="btnLock" type="button"><svg class="i"><use href="#i-lock"/></svg>Kunci</button>
       </div>
@@ -437,6 +462,7 @@ footer{border-top:1px solid var(--line);background:#fff;color:var(--muted);font-
         <select id="fKat" required><option>Pentadbir</option><option selected>Guru</option><option>Kakitangan</option></select></div>
       <div class="field"><label for="fJawatan">Jawatan <i>*</i></label><input id="fJawatan" required maxlength="120" placeholder="cth: Guru Besar, Guru Bahasa Melayu"></div>
       <div class="field"><label for="fJantina">Jantina <i>*</i></label><select id="fJantina" required><option value="">Pilih…</option><option>Lelaki</option><option>Perempuan</option></select></div>
+      <div class="field"><label for="fNoKP">No. Kad Pengenalan</label><input id="fNoKP" maxlength="14" inputmode="numeric" placeholder="cth: 850101-01-5234" autocomplete="off"><p class="hint">Tidak dipaparkan dalam sistem. Hanya terpapar dalam PDF apabila dicetak.</p></div>
       <div class="field"><label for="fGred">Gred</label><input id="fGred" list="gredList" maxlength="10" placeholder="cth: DG41" autocomplete="off" style="text-transform:uppercase"><datalist id="gredList"><option value="DG29"><option value="DG32"><option value="DG34"><option value="DG38"><option value="DG41"><option value="DG44"><option value="DG48"><option value="DG52"><option value="DG54"><option value="DG56"><option value="DG58"><option value="N11"><option value="N14"><option value="N17"><option value="N19"><option value="N22"><option value="N26"><option value="N29"><option value="N32"><option value="N36"></datalist></div>
       <div class="field"><label for="fTel">No. telefon</label><input id="fTel" type="tel" maxlength="30"></div>
       <div class="field"><label for="fEmel">E-mel</label><input id="fEmel" type="email" maxlength="120"></div>
@@ -784,6 +810,7 @@ function openForm(p) {
   F('fJantina').value = p?.jantina || '';
   F('fGred').value = p?.gred || '';
   F('fJawatan').value = p?.jawatan || '';
+  F('fNoKP').value = p?.noKp || '';
   F('fSusunan').value = p?.susunan ?? '';
   F('fTel').value = p?.telefon || '';
   F('fEmel').value = p?.emel || '';
@@ -934,6 +961,7 @@ $('#form').addEventListener('submit', async e => {
     jantina: F('fJantina').value,
     gred: F('fGred').value.trim().toUpperCase(),
     jawatan: F('fJawatan').value.trim(),
+    noKp: F('fNoKP').value.trim(),
     susunan: n === '' ? null : Number(n),
     telefon: F('fTel').value.trim(),
     emel: F('fEmel').value.trim(),
@@ -1004,7 +1032,11 @@ async function deliverPdf(doc, name) {
 }
 
 /* PDF-START */
-function buildPdf(list, logo, jsPDF) {
+const formatIC = s => {
+  const d = String(s || '').replace(/\D/g, '');
+  return d.length === 12 ? `${d.slice(0, 6)}-${d.slice(6, 8)}-${d.slice(8)}` : '-';
+};
+function buildPdf(list, logo, jsPDF, title) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 15;
   const MAROON = [125, 40, 40], NAVY = [61, 46, 112], YELLOW = [249, 238, 31], INK = [43, 29, 29];
@@ -1024,41 +1056,37 @@ function buildPdf(list, logo, jsPDF) {
   };
 
   doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(...INK);
-  doc.text('SENARAI GURU DAN KAKITANGAN', W / 2, 45, { align: 'center' });
+  doc.text(title, W / 2, 45, { align: 'center' });
   doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(90, 80, 80);
   doc.text(`TAHUN ${now.getFullYear()}`, W / 2, 50.5, { align: 'center' });
 
-  const rows = [], counts = {};
-  const bar = (text, fill, color, size) => rows.push({ bar: true, cells: [{ content: text, colSpan: 3, styles: { fillColor: fill, textColor: color, fontStyle: 'bold', fontSize: size, halign: 'left' } }] });
-  KATEGORI.forEach(k => {
-    const g = list.filter(p => p.kategori === k);
-    counts[k] = g.length;
-    if (!g.length) return;
-    bar(`${k.toUpperCase()}  (${g.length})`, MAROON, [255, 255, 255], 10.5);
+  const rows = [];
+  const bar = (text, fill, color, size) => rows.push({ bar: true, cells: [{ content: text, colSpan: 5, styles: { fillColor: fill, textColor: color, fontStyle: 'bold', fontSize: size, halign: 'left' } }] });
+  const guruGroup = list.filter(p => p.kategori !== 'Kakitangan');       // Pentadbir & Guru digabungkan
+  const kakitanganGroup = list.filter(p => p.kategori === 'Kakitangan');
+  const addSection = (label, group) => {
+    if (!group.length) return;
+    bar(`${label}  (${group.length})`, MAROON, [255, 255, 255], 10.5);
     let n = 0;
-    const add = (label, s) => {
-      if (label && s.length) bar(`${label}  (${s.length})`, [243, 236, 226], MAROON, 10);
-      s.forEach(p => rows.push({ cells: [String(++n), p.nama, p.jawatan] }));
-    };
-    if (k !== 'Guru') return add('', g);
-    add('Guru Lelaki', g.filter(p => p.jantina === 'Lelaki'));
-    add('Guru Perempuan', g.filter(p => p.jantina === 'Perempuan'));
-    add('Guru (jantina belum ditetapkan)', g.filter(p => !JANTINA.includes(p.jantina)));
-  });
-  const gl = list.filter(p => p.kategori === 'Guru');
-  const lel = gl.filter(p => p.jantina === 'Lelaki').length, per = gl.filter(p => p.jantina === 'Perempuan').length;
-  const tak = gl.length - lel - per;
-  bar(`JUMLAH KESELURUHAN: ${list.length} orang  (Pentadbir ${counts.Pentadbir}, Guru ${counts.Guru} [Lelaki ${lel}, Perempuan ${per}${tak ? `, belum ditetapkan ${tak}` : ''}], Kakitangan ${counts.Kakitangan})`, YELLOW, INK, 9.5);
+    group.forEach(p => rows.push({ cells: [String(++n), p.nama, formatIC(p.noKp), p.telefon || '-', p.gred || '-'] }));
+  };
+  addSection('NAMA GURU', guruGroup);
+  addSection('NAMA KAKITANGAN', kakitanganGroup);
+
+  const parts = [];
+  if (guruGroup.length) parts.push(`Guru ${guruGroup.length}`);
+  if (kakitanganGroup.length) parts.push(`Kakitangan ${kakitanganGroup.length}`);
+  bar(`JUMLAH KESELURUHAN: ${list.length} orang  (${parts.join(', ')})`, YELLOW, INK, 9.5);
 
   const tableOpts = hooks => ({
     startY: 56,
     margin: { top: 40, left: M, right: M, bottom: 20 },
-    head: [['Bil.', 'Nama', 'Jawatan']],
+    head: [['Bil.', 'Nama', 'No. K/P', 'No. Telefon', 'Gred']],
     body: rows.map(r => r.cells),
     theme: 'grid',
-    styles: { font: 'helvetica', fontSize: 10, cellPadding: 2.4, textColor: INK, lineColor: [222, 212, 196], lineWidth: 0.2, valign: 'middle' },
+    styles: { font: 'helvetica', fontSize: 9.5, cellPadding: 2, textColor: INK, lineColor: [222, 212, 196], lineWidth: 0.2, valign: 'middle' },
     headStyles: { fillColor: NAVY, textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' },
-    columnStyles: { 0: { cellWidth: 14, halign: 'center' }, 2: { cellWidth: 68 } },
+    columnStyles: { 0: { cellWidth: 12, halign: 'center' }, 2: { cellWidth: 32 }, 3: { cellWidth: 28 }, 4: { cellWidth: 18, halign: 'center' } },
     rowPageBreak: 'avoid',
     ...hooks,
   });
@@ -1073,7 +1101,7 @@ function buildPdf(list, logo, jsPDF) {
     if (i < 0) break;
     let s = i;
     while (s > 0 && rows[s - 1].bar && pos[s - 1].page === pos[i].page) s--;
-    rows.splice(s, 0, { cells: [{ content: '', colSpan: 3, styles: { minCellHeight: H - 20 - pos[s].y - 0.5, fillColor: [255, 255, 255], lineWidth: 0 } }] });
+    rows.splice(s, 0, { cells: [{ content: '', colSpan: 5, styles: { minCellHeight: H - 20 - pos[s].y - 0.5, fillColor: [255, 255, 255], lineWidth: 0 } }] });
   }
 
   doc.autoTable(tableOpts({ didDrawPage: drawHeader }));
@@ -1089,22 +1117,54 @@ function buildPdf(list, logo, jsPDF) {
 }
 /* PDF-END */
 
-document.querySelectorAll('.js-pdf').forEach(btn => btn.addEventListener('click', async () => {
-  if (!people.length) return toast('Tiada data untuk dijadikan PDF.', 'err');
+const PDF_SCOPES = {
+  guru: { title: 'SENARAI GURU', file: 'Senarai_Guru', test: p => p.kategori !== 'Kakitangan' },
+  kakitangan: { title: 'SENARAI KAKITANGAN', file: 'Senarai_Kakitangan', test: p => p.kategori === 'Kakitangan' },
+  semua: { title: 'SENARAI GURU DAN KAKITANGAN', file: 'Senarai_Guru_dan_Kakitangan', test: () => true },
+};
+async function runPdf(scope, btn) {
+  const info = PDF_SCOPES[scope];
+  const list = people.filter(info.test);
+  if (!list.length) return toast('Tiada data untuk dijadikan PDF.', 'err');
   const label = btn.innerHTML;
-  btn.disabled = true; btn.textContent = 'Menjana PDF…';
+  btn.disabled = true; btn.innerHTML = 'Menjana PDF…';
   try {
     await withTimeout(loadPdfLibs(), 20000);
-    const doc = buildPdf(people, $('#logo').src, window.jspdf.jsPDF);
+    const doc = buildPdf(list, $('#logo').src, window.jspdf.jsPDF, info.title);
     const d = new Date(), p2 = n => String(n).padStart(2, '0');
-    const how = await deliverPdf(doc, `Senarai_Guru_dan_Kakitangan_SK_Seri_Jaya_${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}.pdf`);
+    const how = await deliverPdf(doc, `${info.file}_SK_Seri_Jaya_${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}.pdf`);
     toast(how === 'downloaded' ? 'PDF sedang dimuat turun.' : how === 'opened' ? 'PDF dibuka dalam tab baharu. Simpan dari sana.' : 'PDF sedia.', 'ok');
   } catch (err) {
     Object.keys(libs).forEach(k => delete libs[k]);   // benarkan cuba semula jika pemuatan tergantung / gagal
     toast(err?.message?.startsWith('Pustaka') ? err.message : errMsg(err), 'err');
   }
   finally { btn.disabled = false; btn.innerHTML = label; }
-}));
+}
+document.querySelectorAll('.pdf-menu').forEach(menu => {
+  const toggle = menu.querySelector('.js-pdf-toggle'), list = menu.querySelector('.pdf-menu-list');
+  toggle.addEventListener('click', e => {
+    e.stopPropagation();
+    const willOpen = list.hidden;
+    document.querySelectorAll('.pdf-menu-list').forEach(l => l.hidden = true);
+    document.querySelectorAll('.js-pdf-toggle').forEach(b => b.setAttribute('aria-expanded', 'false'));
+    list.hidden = !willOpen;
+    toggle.setAttribute('aria-expanded', String(willOpen));
+  });
+  list.addEventListener('click', e => {
+    const item = e.target.closest('.pdf-menu-item'); if (!item) return;
+    list.hidden = true; toggle.setAttribute('aria-expanded', 'false');
+    runPdf(item.dataset.scope, toggle);
+  });
+});
+document.addEventListener('click', () => {
+  document.querySelectorAll('.pdf-menu-list').forEach(l => l.hidden = true);
+  document.querySelectorAll('.js-pdf-toggle').forEach(b => b.setAttribute('aria-expanded', 'false'));
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  document.querySelectorAll('.pdf-menu-list').forEach(l => l.hidden = true);
+  document.querySelectorAll('.js-pdf-toggle').forEach(b => b.setAttribute('aria-expanded', 'false'));
+});
 let resizeTimer;
 window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(fitJawatan, 150); });
 
@@ -1143,7 +1203,7 @@ try {
     const v = snap.val() || {};
     people = Object.entries(v)
       .filter(([, p]) => p && typeof p === 'object' && p.nama)
-      .map(([id, p]) => ({ ...p, id, nama: String(p.nama), jawatan: String(p.jawatan || ''), kategori: KATEGORI.includes(p.kategori) ? p.kategori : 'Guru', jantina: JANTINA.includes(p.jantina) ? p.jantina : '', gred: String(p.gred || '') }))
+      .map(([id, p]) => ({ ...p, id, nama: String(p.nama), jawatan: String(p.jawatan || ''), kategori: KATEGORI.includes(p.kategori) ? p.kategori : 'Guru', jantina: JANTINA.includes(p.jantina) ? p.jantina : '', gred: String(p.gred || ''), noKp: String(p.noKp || '') }))
       .sort(cmp);
     loaded = true; loadError = null; renderAll();
     if (profileId && !$('#profileOv').hidden) {
