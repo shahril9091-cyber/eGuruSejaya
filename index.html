@@ -464,7 +464,7 @@ footer{border-top:1px solid var(--line);background:#fff;color:var(--muted);font-
         <select id="fKat" required><option>Pentadbir</option><option selected>Guru</option><option>Kakitangan</option></select></div>
       <div class="field"><label for="fJawatan">Jawatan <i>*</i></label><input id="fJawatan" required maxlength="120" placeholder="cth: Guru Besar, Guru Bahasa Melayu"></div>
       <div class="field"><label for="fJantina">Jantina <i>*</i></label><select id="fJantina" required><option value="">Pilih…</option><option>Lelaki</option><option>Perempuan</option></select></div>
-      <div class="field"><label for="fNoKP">No. Kad Pengenalan</label><input id="fNoKP" maxlength="14" inputmode="numeric" placeholder="cth: 850101015234" autocomplete="off"><p class="hint">Format tanpa sempang. Tidak dipaparkan dalam profil. Hanya terpapar dalam PDF apabila dicetak.</p></div>
+      <div class="field"><label for="fNoKP">No. Kad Pengenalan</label><input id="fNoKP" maxlength="14" inputmode="numeric" placeholder="cth: 850101015234" autocomplete="off"><p class="hint">Dipaparkan dalam profil dan PDF dalam format tanpa sempang.</p></div>
       <div class="field"><label for="fGred">Gred</label><input id="fGred" list="gredList" maxlength="10" placeholder="cth: DG41" autocomplete="off" style="text-transform:uppercase"><datalist id="gredList"><option value="DG29"><option value="DG32"><option value="DG34"><option value="DG38"><option value="DG41"><option value="DG44"><option value="DG48"><option value="DG52"><option value="DG54"><option value="DG56"><option value="DG58"><option value="N11"><option value="N14"><option value="N17"><option value="N19"><option value="N22"><option value="N26"><option value="N29"><option value="N32"><option value="N36"></datalist></div>
       <div class="field"><label for="fTel">No. telefon</label><input id="fTel" type="tel" maxlength="30"></div>
       <div class="field"><label for="fEmel">E-mel</label><input id="fEmel" type="email" maxlength="120"></div>
@@ -721,6 +721,7 @@ function fillProfile(p) {
   const k = $('#pKat'); k.textContent = p.kategori;
   const tel = (p.telefon || '').trim(), em = (p.emel || '').trim();
   const rows = [
+    ['No. Kad Pengenalan', esc(normalizeIC(p.noKp))],
     ['Jawatan', esc(p.jawatan)],
     ['Gred', esc(p.gred)],
     ['Kategori', esc(p.kategori)],
