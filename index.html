@@ -1086,13 +1086,17 @@ function buildPdf(list, logo, jsPDF, title) {
   if (kakitanganGroup.length) parts.push(`Kakitangan ${kakitanganGroup.length}`);
   bar(`JUMLAH KESELURUHAN: ${list.length} orang  (${parts.join(', ')})`, YELLOW, INK, 9.5);
 
+  // Ruang baris lebih padat untuk eksport Guru Sahaja (56 guru dalam dua halaman).
+  const guruOnly = title === 'SENARAI GURU';
+  const tableFontSize = guruOnly ? 9 : 9.5;
+  const tablePadding = guruOnly ? 1.3 : 2;
   const tableOpts = hooks => ({
     startY: 56,
     margin: { top: 40, left: M, right: M, bottom: 20 },
     head: [['Bil.', 'Nama', 'No. K/P', 'No. Telefon', 'Gred']],
     body: rows.map(r => r.cells),
     theme: 'grid',
-    styles: { font: 'helvetica', fontSize: 9.5, cellPadding: 2, textColor: INK, lineColor: [222, 212, 196], lineWidth: 0.2, valign: 'middle' },
+    styles: { font: 'helvetica', fontSize: tableFontSize, cellPadding: tablePadding, textColor: INK, lineColor: [222, 212, 196], lineWidth: 0.2, valign: 'middle' },
     headStyles: { fillColor: NAVY, textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' },
     columnStyles: { 0: { cellWidth: 12, halign: 'center' }, 2: { cellWidth: 32 }, 3: { cellWidth: 28 }, 4: { cellWidth: 18, halign: 'center' } },
     rowPageBreak: 'avoid',
