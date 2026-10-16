@@ -1068,10 +1068,8 @@ function buildPdf(list, logo, jsPDF, title) {
   const rows = [];
   const bar = (text, fill, color, size) => rows.push({ bar: true, cells: [{ content: text, colSpan: 5, styles: { fillColor: fill, textColor: color, fontStyle: 'bold', fontSize: size, halign: 'left' } }] });
   const guruList = list.filter(p => p.kategori !== 'Kakitangan');       // Pentadbir & Guru digabungkan
-  // PDF Guru Sahaja: kekalkan nombor 1–4, susun nama selebihnya mengikut A–Z.
-  const guruGroup = title === 'SENARAI GURU'
-    ? [...guruList.slice(0, 4), ...guruList.slice(4).sort((a, b) => a.nama.localeCompare(b.nama, 'ms', { sensitivity: 'base' }))]
-    : guruList;
+  // Semua eksport guru: kekalkan nombor 1–4, susun nama selebihnya mengikut A–Z.
+  const guruGroup = [...guruList.slice(0, 4), ...guruList.slice(4).sort((a, b) => a.nama.localeCompare(b.nama, 'ms', { sensitivity: 'base' }))];
   const kakitanganGroup = list.filter(p => p.kategori === 'Kakitangan');
   const groups = [];
   const addSection = (label, group) => {
