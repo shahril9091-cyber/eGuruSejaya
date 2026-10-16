@@ -1086,10 +1086,11 @@ function buildPdf(list, logo, jsPDF, title) {
   if (kakitanganGroup.length) parts.push(`Kakitangan ${kakitanganGroup.length}`);
   bar(`JUMLAH KESELURUHAN: ${list.length} orang  (${parts.join(', ')})`, YELLOW, INK, 9.5);
 
-  // Ruang baris lebih padat untuk eksport Guru Sahaja (56 guru dalam dua halaman).
-  const guruOnly = title === 'SENARAI GURU';
-  const tableFontSize = guruOnly ? 9 : 9.5;
-  const tablePadding = guruOnly ? 1.3 : 2;
+  // Kekalkan susun atur padat guru dalam eksport berasingan dan gabungan.
+  const hasGuru = guruGroup.length > 0;
+  const separateSections = hasGuru && kakitanganGroup.length > 0;
+  const tableFontSize = hasGuru ? 9 : 9.5;
+  const tablePadding = hasGuru ? 1.3 : 2;
   const tableOpts = hooks => ({
     startY: 56,
     margin: { top: 40, left: M, right: M, bottom: 20 },
@@ -1107,7 +1108,7 @@ function buildPdf(list, logo, jsPDF, title) {
   // jalan. Kumpulan besar (cth. Nama Guru, selalunya melebihi satu halaman) hanya dielakkan daripada bar
   // tajuknya keseorangan tanpa sebarang baris mengekorinya di halaman yang sama.
   const SAFE_GROUP_ROWS = 20;
-  for (let guard = 0; guard < 10; guard++) {
+  for (let guard = 0; !separateSections && guard < 10; guard++) {
     const tmp = new jsPDF({ unit: 'mm', format: 'a4' }), pos = [];
     tmp.autoTable(tableOpts({ didDrawCell: c => {
       if (c.section === 'body' && c.column.index === 0) pos[c.row.index] = { page: tmp.internal.getCurrentPageInfo().pageNumber, y: c.cell.y };
@@ -1123,7 +1124,15 @@ function buildPdf(list, logo, jsPDF, title) {
     groups.forEach(g => { if (g.barIndex >= s) { g.barIndex++; g.lastIndex++; } });
   }
 
-  doc.autoTable(tableOpts({ didDrawPage: drawHeader }));
+  if (separateSections) {
+    // Guru mengisi halaman awal; kakitangan sentiasa bermula pada halaman baharu.
+    const staffStart = groups[1].barIndex;
+    doc.autoTable(tableOpts({ body: rows.slice(0, staffStart).map(r => r.cells), didDrawPage: drawHeader }));
+    doc.addPage();
+    doc.autoTable(tableOpts({ startY: 40, body: rows.slice(staffStart).map(r => r.cells), didDrawPage: drawHeader }));
+  } else {
+    doc.autoTable(tableOpts({ didDrawPage: drawHeader }));
+  }
   const pages = doc.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {
     doc.setPage(i);
